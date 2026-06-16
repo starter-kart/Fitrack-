@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "923053385848",
+    "project_id": "studio-2062863024-8bd67",
+    "storage_bucket": "studio-2062863024-8bd67.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:923053385848:android:a4a37a9f8eeee5f6ae258d",
+        "android_client_info": {
+          "package_name": "com.aistudio.fitrack.mqzpwx"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "923053385848-84t5bc7gctpnmefgha01b9lg21ld4k0r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCsXHOCiNnuFNlqCndLXTaNYtrF1QBJh0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "923053385848-84t5bc7gctpnmefgha01b9lg21ld4k0r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "Fitrack",
+  "description": "A clean, modern fitness tracking app to monitor daily steps, calories burned, BMI, and unlock AI-powered insights and diet plans.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

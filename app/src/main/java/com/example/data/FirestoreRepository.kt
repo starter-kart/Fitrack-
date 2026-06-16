@@ -27,6 +27,16 @@ data class DailyLog(
     val waterIntakeMl: Int = 0
 )
 
+data class BmiRecord(
+    val id: String = "",
+    val timestamp: Long = 0L,
+    val dateString: String = "",
+    val height: Float = 0f,
+    val weight: Float = 0f,
+    val bmi: Float = 0f,
+    val category: String = ""
+)
+
 class FirestoreRepository {
     private val db = FirebaseFirestore.getInstance()
     
@@ -61,5 +71,21 @@ class FirestoreRepository {
         val snapshot = db.collection("users").document(userId).collection("logs")
             .get().await()
         return snapshot.toObjects(DailyLog::class.java).sortedByDescending { it.date }
+    }
+
+    suspend fun saveBmiRecord(userId: String, record: BmiRecord) {
+        val docRef = if (record.id.isEmpty()) {
+            db.collection("users").document(userId).collection("bmi_history").document()
+        } else {
+            db.collection("users").document(userId).collection("bmi_history").document(record.id)
+        }
+        val finalRecord = record.copy(id = docRef.id)
+        docRef.set(finalRecord).await()
+    }
+
+    suspend fun getBmiHistory(userId: String): List<BmiRecord> {
+        val snapshot = db.collection("users").document(userId).collection("bmi_history")
+            .get().await()
+        return snapshot.toObjects(BmiRecord::class.java).sortedByDescending { it.timestamp }
     }
 }

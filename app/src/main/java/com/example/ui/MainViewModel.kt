@@ -6,6 +6,7 @@ import com.example.data.AuthManager
 import com.example.data.DailyLog
 import com.example.data.FirestoreRepository
 import com.example.data.UserProfile
+import com.example.data.BmiRecord
 import com.example.network.GeminiHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +23,7 @@ data class AppState(
     val profile: UserProfile = UserProfile(),
     val todayLog: DailyLog = DailyLog(),
     val dailyLogs: List<DailyLog> = emptyList(),
+    val bmiHistory: List<BmiRecord> = emptyList(),
     val aiInsights: String? = null,
     val errorMessage: String? = null
 )
@@ -118,10 +120,12 @@ class MainViewModel(
                 val profile = firestoreRepo.getProfile(userId) ?: UserProfile()
                 val todayLog = firestoreRepo.getDailyLog(userId) ?: DailyLog()
                 val dailyLogs = firestoreRepo.getAllDailyLogs(userId)
+                val bmiHistory = firestoreRepo.getBmiHistory(userId)
                 _state.update { it.copy(
                     profile = profile, 
                     todayLog = todayLog, 
                     dailyLogs = dailyLogs, 
+                    bmiHistory = bmiHistory,
                     isLoading = false
                 ) }
             } catch (e: Exception) {
@@ -140,7 +144,29 @@ class MainViewModel(
         viewModelScope.launch {
             try {
                 firestoreRepo.saveProfile(userId, newProfile)
-                _state.update { it.copy(isLoading = false) }
+                
+                // Save calculation history
+                val todayStr = SimpleDateFormat("EEEE, d MMMM yyyy, HH:mm", Locale.getDefault()).format(Date())
+                val category = when {
+                    bmi < 18.5f -> "Underweight"
+                    bmi < 25f -> "Normal"
+                    bmi < 30f -> "Overweight"
+                    else -> "Obese"
+                }
+                val record = BmiRecord(
+                    id = "",
+                    timestamp = System.currentTimeMillis(),
+                    dateString = todayStr,
+                    height = height,
+                    weight = weight,
+                    bmi = bmi,
+                    category = category
+                )
+                firestoreRepo.saveBmiRecord(userId, record)
+                
+                // Fetch updated history
+                val bmiHistory = firestoreRepo.getBmiHistory(userId)
+                _state.update { it.copy(bmiHistory = bmiHistory, isLoading = false) }
             } catch (e: Exception) {
                 _state.update { it.copy(isLoading = false, errorMessage = "Failed to save profile.") }
             }

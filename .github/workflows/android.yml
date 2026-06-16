@@ -22,6 +22,9 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+    - name: Decode Keystore
+      run: base64 -d debug.keystore.base64 > debug.keystore
+
     - name: Build Debug APK
       run: |
         # Download and run gradle assembleDebug

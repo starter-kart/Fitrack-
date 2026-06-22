@@ -284,6 +284,23 @@ class MainViewModel(
         }
     }
 
+    fun resetWaterIntake() {
+        val userId = authManager.currentUser?.uid ?: return
+        val todayStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val currentLog = _state.value.todayLog
+        val newLog = currentLog.copy(date = todayStr, waterIntakeMl = 0)
+        _state.update { it.copy(todayLog = newLog) }
+        viewModelScope.launch {
+            try {
+                firestoreRepo.saveDailyLog(userId, newLog)
+                val dailyLogs = firestoreRepo.getAllDailyLogs(userId)
+                _state.update { it.copy(dailyLogs = dailyLogs) }
+            } catch (e: Exception) {
+                // Silent catch
+            }
+        }
+    }
+
     fun clearError() {
         _state.update { it.copy(errorMessage = null) }
     }

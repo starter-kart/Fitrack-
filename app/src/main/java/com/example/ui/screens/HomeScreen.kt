@@ -1,22 +1,21 @@
 package com.example.ui.screens
 
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.layout.ContentScale
-import com.example.R
 import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.TrendingUp
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,20 +27,23 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.ui.MainViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(viewModel: MainViewModel) {
     val state by viewModel.state.collectAsState()
     var selectedTab by remember { mutableStateOf(0) } // 0 = Steps, 1 = Weight
-    var activeBarIndex by remember { mutableStateOf(-1) }
     
     // Construct real weekly data based on dailyLogs and bmiHistory
     val stepsGoal = 10000
@@ -68,374 +70,493 @@ fun HomeScreen(viewModel: MainViewModel) {
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Column {
-                        Text(
-                            text = "Dashboard", 
-                            fontWeight = FontWeight.ExtraBold,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        Text(
-                            text = "Welcome back, Champion!",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-                    }
-                },
-                actions = {
-                    if (state.profile.subscriptionActive) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier.padding(end = 4.dp)
-                        ) {
-                            Text(
-                                text = "PRO ACTIVE",
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                    IconButton(onClick = { viewModel.signOut() }) {
-                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Sign Out")
-                    }
-                }
-            )
-        }
+        containerColor = Color(0xFFF7F8FC)
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // HERO BANNER
-            Card(
-                shape = RoundedCornerShape(24.dp),
+            // TOP APP BAR REPLACEMENT
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.fitness_hero),
-                    contentDescription = "Fitness Hero",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            
-            // KEY STATISTICS ROW (Grid replacement)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Today's Steps Card
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("TODAY STEPS", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("${state.todayLog.steps}", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold))
-                        Spacer(modifier = Modifier.height(4.dp))
-                        LinearProgressIndicator(
-                            progress = { (state.todayLog.steps.toFloat() / stepsGoal).coerceIn(0f, 1f) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp)),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                // Left Title
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "FitTrack",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            fontSize = 26.sp,
+                            color = Color(0xFF1E1E2D)
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "${(state.todayLog.steps * 100 / stepsGoal)}% of Goal",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.Filled.Timeline,
+                        contentDescription = "Logo",
+                        tint = Color(0xFF6B58FF),
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
 
-                // Calories Card
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f)),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("CALORIES BURNED", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.secondary)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text("${state.todayLog.caloriesBurned} kcal", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.ExtraBold))
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Estimated active loss",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            // PROFILE OVERVIEW & BMI CARD
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "Current Weight",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = if (state.profile.weight > 0) "${state.profile.weight} kg" else "-- kg",
-                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Age: ${state.profile.age} | Height: ${state.profile.height} cm",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    
-                    // BMI Visual Badge
-                    if (state.profile.weight > 0) {
-                        val bmi = state.profile.bmi
-                        val bmiCategory = when {
-                            bmi < 18.5f -> "Underweight"
-                            bmi < 25f -> "Normal"
-                            bmi < 30f -> "Overweight"
-                            else -> "Obese"
-                        }
-                        val bmiColor = when {
-                            bmi < 18.5f -> MaterialTheme.colorScheme.primary
-                            bmi < 25f -> Color(0xFF4CAF50)
-                            bmi < 30f -> Color(0xFFFF9800)
-                            else -> Color(0xFFF44336)
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = bmiColor.copy(alpha = 0.15f)),
-                                shape = RoundedCornerShape(8.dp)
+                // Right Actions
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (state.profile.subscriptionActive) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFEBE7FF),
+                            modifier = Modifier.padding(end = 16.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
+                                Icon(
+                                    imageVector = Icons.Filled.FlashOn,
+                                    contentDescription = "Pro",
+                                    tint = Color(0xFF6B58FF),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = String.format("BMI: %.1f", bmi),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = bmiColor
+                                    text = "PRO ACTIVE",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp
+                                    ),
+                                    color = Color(0xFF6B58FF)
                                 )
                             }
-                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                    }
+                    
+                    Box(modifier = Modifier.clickable { /* Notifications */ }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = "Notifications",
+                            tint = Color(0xFF1E1E2D),
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = (-2).dp, y = 2.dp)
+                                .size(10.dp)
+                                .background(Color(0xFFFF4B4B), CircleShape)
+                        )
+                    }
+                }
+            }
+
+            // GREETING
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 20.dp),
+            ) {
+                Text(
+                    text = "Welcome back, Champion! \uD83D\uDC4B",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color(0xFF6C6C80)
+                )
+            }
+
+            // HERO BANNER
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .height(240.dp)
+                    .clip(RoundedCornerShape(32.dp))
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color(0xFFEAE5FF), Color(0xFFF6E2FF), Color(0xFFDDF6F9))
+                        )
+                    )
+            ) {
+                // Background Image
+                Image(
+                    painter = painterResource(id = R.drawable.fitness_hero),
+                    contentDescription = "Runner",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(0.55f)
+                        .align(Alignment.CenterEnd)
+                        .offset(x = 10.dp)
+                )
+
+                // Overlay Content (Left side)
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(start = 24.dp, top = 24.dp, bottom = 24.dp, end = 12.dp)
+                        .align(Alignment.CenterStart),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
+                            contentDescription = "Steps",
+                            tint = Color(0xFF6B58FF),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Today's Steps",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color(0xFF4A4B6B)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier.size(110.dp).offset(y = (-4).dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            progress = { (state.todayLog.steps.toFloat() / stepsGoal).coerceIn(0f, 1f) },
+                            color = Color(0xFF6B58FF),
+                            strokeWidth = 6.dp,
+                            trackColor = Color.White.copy(alpha=0.6f),
+                            strokeCap = StrokeCap.Round,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = bmiCategory,
+                                text = "${state.todayLog.steps}",
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 28.sp
+                                ),
+                                color = Color(0xFF1E1E2D)
+                            )
+                            Text(
+                                text = "Steps",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = bmiColor
+                                color = Color(0xFF6C6C80)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "${(state.todayLog.steps * 100 / stepsGoal).coerceIn(0, 100)}% of 10,000 Goal",
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                color = Color(0xFF6C6C80)
                             )
                         }
                     }
+                    
+                    Surface(
+                        color = Color(0xFF6B58FF),
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.clickable { /* Navigate to insights */ }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("View Insights", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = Color.White)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(Icons.AutoMirrored.Filled.TrendingUp, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                        }
+                    }
+                }
+                
+                // Top Right Analytics Icon Button over Image
+                Surface(
+                    color = Color.White.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.align(Alignment.TopEnd).padding(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.BarChart,
+                        contentDescription = "Analytics",
+                        tint = Color(0xFF6B58FF),
+                        modifier = Modifier.padding(8.dp).size(20.dp)
+                    )
                 }
             }
 
-            // GORGEOUS INTERACTIVE VISUAL TREND ANALYTICS SECTION
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // KEY STATISTICS ROW
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Calories Burned Card
+                Card(
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(color = Color(0xFFE8F7F0), shape = RoundedCornerShape(8.dp)) {
+                                Icon(Icons.Outlined.LocalFireDepartment, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.padding(6.dp).size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Calories Burned", style = MaterialTheme.typography.labelMedium, color = Color(0xFF6C6C80))
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text("${state.todayLog.caloriesBurned}", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold, fontSize = 24.sp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("kcal", style = MaterialTheme.typography.labelMedium, color = Color(0xFF1E1E2D), modifier = Modifier.padding(bottom = 2.dp))
+                        }
+                        Text("Estimated active loss", style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp), color = Color(0xFF6C6C80))
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        // Draw a wave
+                        Canvas(modifier = Modifier.fillMaxWidth().height(24.dp)) {
+                            val path = Path().apply {
+                                moveTo(0f, size.height/2)
+                                cubicTo(size.width * 0.25f, 0f, size.width * 0.75f, size.height, size.width, size.height/2)
+                            }
+                            drawPath(path, color = Color(0xFF4CAF50), style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+                            
+                            val path2 = Path().apply {
+                                moveTo(0f, size.height/2 + 8.dp.toPx())
+                                cubicTo(size.width * 0.25f, 8.dp.toPx(), size.width * 0.75f, size.height + 8.dp.toPx(), size.width, size.height/2 + 8.dp.toPx())
+                            }
+                            drawPath(path2, color = Color(0xFF4CAF50).copy(alpha=0.3f), style = Stroke(width = 1.dp.toPx(), cap = StrokeCap.Round))
+                        }
+                    }
+                }
+
+                // Goal Progress Card
+                Card(
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(color = Color(0xFFFFF1E6), shape = RoundedCornerShape(8.dp)) {
+                                Icon(Icons.Outlined.TrackChanges, contentDescription = null, tint = Color(0xFFFF9800), modifier = Modifier.padding(6.dp).size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Goal Progress", style = MaterialTheme.typography.labelMedium, color = Color(0xFF6C6C80))
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text("${(state.todayLog.steps * 100 / stepsGoal).coerceIn(0, 100)}%", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold, fontSize = 24.sp))
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text("Keep pushing!", style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp), color = Color(0xFF6C6C80))
+                        
+                        // Fills the rest to align bottom items correctly
+                        Spacer(modifier = Modifier.weight(1f, fill = false))
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        LinearProgressIndicator(
+                            progress = { (state.todayLog.steps.toFloat() / stepsGoal).coerceIn(0.02f, 1f) },
+                            modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                            color = Color(0xFFFF9800),
+                            trackColor = Color(0xFFF3F3F3)
+                        )
+                        Spacer(modifier = Modifier.height(14.dp))
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // CURRENT WEIGHT CARD
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(color = Color(0xFFF3E8FF), shape = RoundedCornerShape(12.dp)) {
+                            Icon(Icons.Outlined.MonitorWeight, contentDescription = null, tint = Color(0xFF6B58FF), modifier = Modifier.padding(12.dp).size(24.dp))
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("Current Weight", style = MaterialTheme.typography.labelMedium, color = Color(0xFF6C6C80))
+                            Text(
+                                text = if (state.profile.weight > 0) "${state.profile.weight} kg" else "-- kg", 
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold, fontSize = 20.sp)
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Surface(
+                                color = Color(0xFF6B58FF),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.clickable { /* Update */ }
+                            ) {
+                                Text("Update", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = Color.White, modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp))
+                            }
+                        }
+                    }
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Outlined.Accessibility, contentDescription = null, tint = Color(0xFF6B58FF), modifier = Modifier.size(48.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text("Age: ${state.profile.age}", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6C6C80))
+                            Text("Height: ${state.profile.height} cm", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6C6C80))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // PROGRESS ANALYTICS
             Card(
                 shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = AssistChipDefaults.assistChipBorder(enabled = true),
-                modifier = Modifier.fillMaxWidth()
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "Progress Analytics (Weekly)",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        )
+                        Text("Progress Analytics (Weekly)", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF1E1E2D)))
                         
-                        // Mini Segmented Tabs
                         Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(30.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
-                                .padding(2.dp)
+                            modifier = Modifier.clip(RoundedCornerShape(30.dp)).background(Color(0xFFF3F3F3)).padding(2.dp)
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(30.dp))
-                                    .background(if (selectedTab == 0) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                    .clickable { selectedTab = 0 }
-                                    .padding(horizontal = 14.dp, vertical = 6.dp)
+                                modifier = Modifier.clip(RoundedCornerShape(30.dp)).background(if (selectedTab == 0) Color(0xFF6B58FF) else Color.Transparent).clickable { selectedTab = 0 }.padding(horizontal = 16.dp, vertical = 6.dp)
                             ) {
-                                Text(
-                                    "Steps", 
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = if (selectedTab == 0) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Text("Steps", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = if (selectedTab == 0) Color.White else Color(0xFF6C6C80))
                             }
                             Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(30.dp))
-                                    .background(if (selectedTab == 1) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                    .clickable { selectedTab = 1 }
-                                    .padding(horizontal = 14.dp, vertical = 6.dp)
+                                modifier = Modifier.clip(RoundedCornerShape(30.dp)).background(if (selectedTab == 1) Color.White else Color.Transparent).clickable { selectedTab = 1 }.padding(horizontal = 16.dp, vertical = 6.dp)
                             ) {
-                                Text(
-                                    "Weight", 
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = if (selectedTab == 1) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                Text("Weight", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = if (selectedTab == 1) Color(0xFF1E1E2D) else Color(0xFF6C6C80))
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // THE DYNAMIC CANVAS TREND CHARTS
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp)
-                    ) {
+                    // Chart
+                    Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
                         if (selectedTab == 0) {
-                            // STEPS BAR CHART
-                            val maxSteps = stepsList.maxOrNull()?.toFloat() ?: 12000f
-                            val primaryColor = MaterialTheme.colorScheme.primary
-                            val accentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                            
-                            Canvas(
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                val canvasWidth = size.width
-                                val canvasHeight = size.height
-                                val barWidth = 32.dp.toPx()
+                            val maxSteps = stepsList.maxOrNull()?.toFloat()?.coerceAtLeast(10000f) ?: 10000f
+                            Canvas(modifier = Modifier.fillMaxSize()) {
+                                val w = size.width
+                                val h = size.height
+                                val barWidth = 8.dp.toPx()
                                 val numBars = stepsList.size
-                                val spaceBetween = if (numBars > 1) (canvasWidth - (barWidth * numBars)) / (numBars + 1) else (canvasWidth - barWidth) / 2
-
-                                // Draw background guidelines
-                                for (i in 1..3) {
-                                    val yValue = canvasHeight * (i / 4f)
-                                    drawLine(
-                                        color = Color.Gray.copy(alpha = 0.15f),
-                                        start = Offset(0f, yValue),
-                                        end = Offset(canvasWidth, yValue),
-                                        strokeWidth = 2f
-                                    )
+                                
+                                // Background guidelines & text
+                                val textPaint = android.graphics.Paint().apply {
+                                    color = android.graphics.Color.parseColor("#A0A0B0")
+                                    textSize = 10.sp.toPx()
+                                    isAntiAlias = true
                                 }
-
-                                // Draw individual steps bars
-                                stepsList.forEachIndexed { index, value ->
-                                    val xOffset = spaceBetween + index * (barWidth + spaceBetween)
-                                    val progressPercentage = if (maxSteps > 0) (value.toFloat() / maxSteps).coerceIn(0.05f, 1.0f) else 0.05f
-                                    val barHeight = canvasHeight * progressPercentage
-                                    val yOffset = canvasHeight - barHeight
-
-                                    // Special highlight for Sunday (the active today's entry)
-                                    val fillBrush = if (index == stepsList.size - 1) {
-                                        Brush.verticalGradient(
-                                            colors = listOf(primaryColor, primaryColor.copy(alpha = 0.6f))
-                                        )
-                                    } else {
-                                        Brush.verticalGradient(
-                                            colors = listOf(accentColor.copy(alpha = 1.0f), accentColor.copy(alpha = 0.5f))
+                                
+                                val stepTicks = listOf("10K", "8K", "6K", "4K", "2K", "0")
+                                stepTicks.forEachIndexed { idx, tick ->
+                                    val yPos = h * (idx / 5f)
+                                    if(idx < 5) {
+                                        drawLine(
+                                            color = Color(0xFFF3F3F3),
+                                            start = Offset(24.dp.toPx(), yPos),
+                                            end = Offset(w, yPos),
+                                            strokeWidth = 1.dp.toPx(),
+                                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                                         )
                                     }
+                                    drawContext.canvas.nativeCanvas.drawText(tick, 0f, yPos + 4.dp.toPx(), textPaint)
+                                }
 
+                                // Bars
+                                val startX = 36.dp.toPx()
+                                val availableW = w - startX
+                                val actualSpace = if (numBars > 1) (availableW - (barWidth * numBars)) / (numBars - 1) else availableW / 2
+                                
+                                stepsList.forEachIndexed { index, value ->
+                                    val xOffset = startX + index * (barWidth + actualSpace)
+                                    val progressPercentage = (value.toFloat() / maxSteps).coerceIn(0.01f, 1.0f)
+                                    // Height inversion for rendering bottom-up
+                                    val barHeight = h * progressPercentage
+                                    val yOffset = h - barHeight
+
+                                    val isToday = index == stepsList.size - 1
                                     drawRoundRect(
-                                        brush = fillBrush,
+                                        color = if (isToday) Color(0xFF6B58FF) else Color(0xFFF3F3F3),
                                         topLeft = Offset(xOffset, yOffset),
                                         size = Size(barWidth, barHeight),
-                                        cornerRadius = CornerRadius(8.dp.toPx(), 8.dp.toPx())
+                                        cornerRadius = CornerRadius(4.dp.toPx(), 4.dp.toPx())
                                     )
+                                    
+                                    if (isToday) {
+                                        // Draw count above
+                                        val valStr = value.toString()
+                                        val valPaint = android.graphics.Paint().apply {
+                                            color = android.graphics.Color.parseColor("#6B58FF")
+                                            textSize = 10.sp.toPx()
+                                            textAlign = android.graphics.Paint.Align.CENTER
+                                            isAntiAlias = true
+                                            isFakeBoldText = true
+                                        }
+                                        drawContext.canvas.nativeCanvas.drawText(valStr, xOffset + barWidth/2, yOffset - 8.dp.toPx(), valPaint)
+                                    }
                                 }
                             }
                         } else {
-                            // WEIGHT PROGRESS LINE CHART
-                            val minW = (weightList.minOrNull() ?: 60f) - 2f
                             val maxW = (weightList.maxOrNull() ?: 100f) + 2f
-                            val valRange = if (maxW - minW > 0) maxW - minW else 10f
-                            val lineColor = MaterialTheme.colorScheme.primary
+                            val minW = (weightList.minOrNull() ?: 60f) - 2f
                             
                             Canvas(modifier = Modifier.fillMaxSize()) {
-                                val canvasWidth = size.width
-                                val canvasHeight = size.height
+                                val w = size.width
+                                val h = size.height
                                 val numPoints = weightList.size
-                                val xSpace = if (numPoints > 1) canvasWidth / (numPoints - 1) else canvasWidth / 2
-
+                                val startX = 36.dp.toPx()
+                                val availableW = w - startX
+                                val actualSpace = if (numPoints > 1) availableW / (numPoints - 1) else availableW / 2
+                                val range = maxW - minW
+                                
                                 val points = weightList.mapIndexed { index, value ->
-                                    val x = if (numPoints > 1) index * xSpace else xSpace
-                                    val y = canvasHeight - ((value - minW) / valRange) * canvasHeight
+                                    val x = startX + index * actualSpace
+                                    val y = h - ((value - minW) / range) * h
                                     Offset(x, y)
                                 }
-
-                                // 1. Draw smooth bezier path
+                                
                                 val strokePath = Path().apply {
-                                    if (points.isNotEmpty()) {
+                                    if(points.isNotEmpty()){
                                         moveTo(points[0].x, points[0].y)
-                                        for (i in 1 until points.size) {
+                                        for(i in 1 until points.size){
                                             val currentPoint = points[i]
-                                            val previousPoint = points[i - 1]
-                                            val controlPointX = (previousPoint.x + currentPoint.x) / 2
-                                            
-                                            cubicTo(
-                                                controlPointX, previousPoint.y,
-                                                controlPointX, currentPoint.y,
-                                                currentPoint.x, currentPoint.y
-                                            )
+                                            val previousPoint = points[i-1]
+                                            val controlPointX = (previousPoint.x + currentPoint.x)/2
+                                            cubicTo(controlPointX, previousPoint.y, controlPointX, currentPoint.y, currentPoint.x, currentPoint.y)
                                         }
                                     }
                                 }
-
-                                // 2. Draw Translucent area under line
-                                val fillPath = Path().apply {
-                                    addPath(strokePath)
-                                    if (points.isNotEmpty()) {
-                                        lineTo(points.last().x, canvasHeight)
-                                        lineTo(points.first().x, canvasHeight)
-                                        close()
-                                    }
-                                }
-
-                                drawPath(
-                                    path = fillPath,
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(lineColor.copy(alpha = 0.35f), Color.Transparent),
-                                        startY = 0f,
-                                        endY = canvasHeight
-                                    )
-                                )
-
-                                drawPath(
-                                    path = strokePath,
-                                    color = lineColor,
-                                    style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
-                                )
-
-                                // 3. Draw dots representing active elements
+                                
+                                drawPath(strokePath, color = Color(0xFF6B58FF), style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round))
+                                
                                 points.forEachIndexed { idx, point ->
                                     drawCircle(
-                                        color = if (idx == points.size - 1) lineColor else lineColor.copy(alpha = 0.5f),
-                                        radius = if (idx == points.size - 1) 7.dp.toPx() else 5.dp.toPx(),
+                                        color = if (idx == points.size - 1) Color(0xFF6B58FF) else Color(0xFFEBE7FF),
+                                        radius = 6.dp.toPx(),
                                         center = point
                                     )
+                                    if(idx == points.size - 1){
+                                        drawCircle(color = Color.White, radius = 3.dp.toPx(), center = point)
+                                    }
                                 }
                             }
                         }
@@ -443,50 +564,91 @@ fun HomeScreen(viewModel: MainViewModel) {
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Labels below chart
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(start = 36.dp),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         weekDays.forEach { day ->
-                            Text(
-                                text = day,
-                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                modifier = Modifier.width(36.dp),
-                                textAlign = TextAlign.Center
-                            )
+                            Text(day, style = MaterialTheme.typography.labelSmall, color = Color(0xFFA0A0B0), modifier = Modifier.width(34.dp), textAlign = TextAlign.Center)
                         }
                     }
 
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-                    // Trends Insights Breakdown Info Row
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                    Spacer(modifier = Modifier.height(20.dp))
+                    
+                    Surface(
+                        color = Color(0xFFF7F8FC),
+                        shape = RoundedCornerShape(12.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Info,
-                            contentDescription = "Analysis Info",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (selectedTab == 0) {
-                                val avg = stepsList.average().toInt()
-                                "Weekly average: $avg steps • ${if(avg >= 7000) "Highly active pacing" else "Keep pushing towards 10k!"}"
+                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFF6B58FF), modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            val avgBase = if (selectedTab == 0) {
+                                "Weekly average: ${stepsList.average().toInt()} steps • Keep pushing towards 10k!"
                             } else {
-                                val netWeightChange = weightList.first() - weightList.last()
-                                val changePrefix = if (netWeightChange >= 0) "Lost" else "Gained"
-                                "Weight trend: $changePrefix ${String.format("%.1f", Math.abs(netWeightChange))} kg across the week."
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                                val diff = weightList.first() - weightList.last()
+                                val diffString = String.format("%.1f", Math.abs(diff))
+                                "Weekly trend: ${if(diff >= 0) "Lost" else "Gained"} $diffString kg"
+                            }
+                            Text(avgBase, style = MaterialTheme.typography.labelMedium, color = Color(0xFF4A4B6B))
+                        }
                     }
                 }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+            
+            // GO PREMIUM CARD
+            if (!state.profile.subscriptionActive) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 24.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(Color(0xFF4C6BFF), Color(0xFF8E54E9))
+                            )
+                        )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(20.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Surface(color = Color.White.copy(alpha=0.2f), shape = CircleShape) {
+                                Icon(Icons.Filled.Star, contentDescription = null, tint = Color(0xFFFFD700), modifier = Modifier.padding(10.dp).size(24.dp))
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text("Go Premium", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color.White)
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text("Unlock advanced insights, custom goals and ad-free experience.", style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha=0.8f))
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.width(16.dp))
+                        
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = Color.White,
+                            modifier = Modifier.clickable { viewModel.activateSubscription() }
+                        ) {
+                            Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text("Upgrade Now", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF6B58FF))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color(0xFF6B58FF), modifier = Modifier.size(14.dp))
+                            }
+                        }
+                    }
+                }
+            } else {
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }

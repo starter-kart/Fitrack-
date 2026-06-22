@@ -3,9 +3,9 @@ package com.example.ui.screens
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -35,7 +35,7 @@ fun MainAppNavigation(viewModel: MainViewModel) {
                 NavigationBarItem(
                     selected = currentRoute == "progress",
                     onClick = { navController.navigate("progress") },
-                    icon = { Icon(Icons.Filled.List, contentDescription = "Progress") },
+                    icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Progress") },
                     label = { Text("Progress") }
                 )
                 NavigationBarItem(

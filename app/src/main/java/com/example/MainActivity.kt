@@ -91,7 +91,7 @@ class MainActivity : ComponentActivity(), PaymentResultListener {
                             }
                             MainAppNavigation(viewModel)
                         } else {
-                            LoginScreen(viewModel)
+                            com.example.ui.screens.AuthScreen(viewModel)
                         }
                     }
                 }
@@ -327,118 +327,4 @@ fun SplashScreen() {
     }
 }
 
-@Composable
-fun LoginScreen(viewModel: MainViewModel) {
-    val state by viewModel.state.collectAsState()
-    
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var isSignUp by remember { mutableStateOf(false) }
-    var passwordVisible by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .windowInsetsPadding(WindowInsets.safeContent),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text(
-            text = "Fitrack",
-            style = MaterialTheme.typography.displayMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Track your fitness, achieve your goals.",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f)
-        )
-        Spacer(modifier = Modifier.height(40.dp))
-        
-        // Email Input Field
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email Address") },
-            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email Icon") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Password Input Field
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = "Lock Icon") },
-            trailingIcon = {
-                val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                val description = if (passwordVisible) "Hide password" else "Show password"
-                
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = icon, contentDescription = description)
-                }
-            },
-            singleLine = true,
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        if (state.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-        } else {
-            // Main Auth Action Button
-            Button(
-                onClick = {
-                    if (email.isNotBlank() && password.isNotBlank()) {
-                        if (isSignUp) {
-                            viewModel.signUpWithEmail(email, password)
-                        } else {
-                            viewModel.signInWithEmail(email, password)
-                        }
-                    } else {
-                        // Let the ViewModel show a simple error check
-                    }
-                },
-                enabled = email.isNotBlank() && password.isNotBlank(),
-                modifier = Modifier.fillMaxWidth().height(56.dp)
-            ) {
-                Text(
-                    text = if (isSignUp) "Create Account" else "Sign In",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Toggle login/signup mode
-            TextButton(
-                onClick = { isSignUp = !isSignUp }
-            ) {
-                Text(
-                    text = if (isSignUp) "Already have an account? Sign In" else "Don't have an account? Sign Up",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-
-        if (state.errorMessage != null) {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = state.errorMessage!!,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-        }
-    }
-}
+// Removed old LoginScreen in favor of AuthScreen

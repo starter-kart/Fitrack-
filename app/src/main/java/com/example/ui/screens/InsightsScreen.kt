@@ -1,30 +1,34 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
 import com.example.MainActivity
+import com.example.R
 import com.example.ui.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,591 +37,422 @@ fun InsightsScreen(viewModel: MainViewModel) {
     val context = LocalContext.current
     val activity = context as? MainActivity
     val state by viewModel.state.collectAsState()
-    var goalsInput by remember { mutableStateOf(state.profile.goals) }
-    var showPaymentDialog by remember { mutableStateOf(false) }
-
-    // Premium Subscription Configurations
-    var sedentaryEnabled by remember(state.profile) { mutableStateOf(state.profile.sedentaryAlertEnabled) }
-    var sedentaryThresholdInput by remember(state.profile) { mutableStateOf(state.profile.sedentaryAlertThresholdMinutes.toString()) }
     
-    var waterGoalInput by remember(state.profile) { mutableStateOf(state.profile.waterGoalMl.toString()) }
+    var goalsInput by remember { mutableStateOf(if (state.profile.goals.isEmpty()) "gain 5 kg" else state.profile.goals) }
+
+    var sedentaryEnabled by remember(state.profile) { mutableStateOf(state.profile.sedentaryAlertEnabled) }
+    var waterGoalInput by remember(state.profile) { mutableStateOf(if (state.profile.waterGoalMl == 0) "2000" else state.profile.waterGoalMl.toString()) }
     var waterReminderEnabled by remember(state.profile) { mutableStateOf(state.profile.waterReminderEnabled) }
-    var waterIntervalInput by remember(state.profile) { mutableStateOf(state.profile.waterReminderIntervalMinutes.toString()) }
+
+    val currentIntake = state.dailyLogs.firstOrNull { it.date == state.todayLog.date }?.waterIntakeMl ?: state.todayLog.waterIntakeMl
+    val dailyGoal = waterGoalInput.toIntOrNull() ?: 2000
+    val progress = if (dailyGoal > 0) (currentIntake.toFloat() / dailyGoal).coerceIn(0f, 1f) else 0f
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Pro Insights", fontWeight = FontWeight.Bold)
-                        if (state.profile.subscriptionActive) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                                ),
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Text(
-                                    text = "PRO",
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                        }
-                    }
-                }
-            )
-        }
+        containerColor = Color(0xFFF7F8FC)
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (!state.profile.subscriptionActive) {
-                // PREMIUM PAYWALL WALL
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    ),
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(24.dp)
-                            .fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
+            // TOP APP BAR
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Left Title
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Pro Insights",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Black,
+                            fontSize = 26.sp,
+                            color = Color(0xFF1E1E2D)
+                        )
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFEBE7FF)
                     ) {
-                        // Premium Badge Header
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
+                        Text(
+                            text = "PRO",
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp
+                            ),
+                            color = Color(0xFF6B58FF)
+                        )
+                    }
+                }
+
+                // Right Actions
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFEBE7FF),
+                        modifier = Modifier.padding(end = 16.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Star,
-                                contentDescription = "Premium Icon",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        Text(
-                            text = "Fitrack Premium",
-                            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.ExtraBold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        
-                        Spacer(modifier = Modifier.height(6.dp))
-                        
-                        Text(
-                            text = "Unlock AI insights tailor-made for your physique",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Premium Benefits Checklist
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(14.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            BenefitRow(
-                                title = "Personalized AI Expert Plans",
-                                description = "Unique meal timings, workout protocols, and habit alterations."
-                            )
-                            BenefitRow(
-                                title = "Smart Calories Analysis",
-                                description = "Identify hidden nutrition obstacles automatically via logs."
-                            )
-                            BenefitRow(
-                                title = "Powered by Gemini 3.5",
-                                description = "Always utilizes state-of-the-art reasoning models."
-                            )
-                            BenefitRow(
-                                title = "One-Time Payment, Lifetime Access",
-                                description = "Never pay a monthly subscription fee."
-                            )
-                        }
-                        
-                        Spacer(modifier = Modifier.height(32.dp))
-                        
-                        // Pricing Section
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                            ),
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = "SPECIAL PRICE",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "₹199",
-                                    style = MaterialTheme.typography.displayMedium.copy(fontWeight = FontWeight.ExtraBold),
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                Text(
-                                    text = "One-time Lifetime Access Upgrade",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Primary Purchase Button
-                        Button(
-                            onClick = { activity?.startRazorpayPayment(199) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp),
-                            shape = RoundedCornerShape(14.dp)
-                        ) {
-                            Icon(Icons.Filled.Lock, contentDescription = "Secure Checkout")
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Pay ₹199 via Razorpay", style = MaterialTheme.typography.titleMedium)
-                        }
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        // Small notes label
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .clickable { showPaymentDialog = true }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Info,
-                                contentDescription = "SECURE",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                contentDescription = "Pro",
+                                tint = Color(0xFF6B58FF),
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Secure transaction backed by Razorpay Pay",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                textAlign = TextAlign.Center
+                                text = "PRO ACTIVE",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp
+                                ),
+                                color = Color(0xFF6B58FF)
                             )
                         }
                     }
-                }
-            } else {
-                // INSIGHTS VIEW FOR PREMIUM MEMBERS
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth().border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Star, contentDescription = "Premium Pro", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("PRO MEMBER STATUS ACTIVE", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold), color = MaterialTheme.colorScheme.primary)
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "You have permanently unlocked all state-of-the-art AI-driven fitness strategy engines, custom hydration triggers, and active posture alerts!",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                    
+                    Box(modifier = Modifier.clickable { /* Notifications */ }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Notifications,
+                            contentDescription = "Notifications",
+                            tint = Color(0xFF1E1E2D),
+                            modifier = Modifier.size(28.dp)
+                        )
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .offset(x = (-2).dp, y = 2.dp)
+                                .size(10.dp)
+                                .background(Color(0xFFFF4B4B), CircleShape)
                         )
                     }
                 }
+            }
 
-                // HYDRO ENGINES & LOGS CARD
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+            // Subtitle
+            Text(
+                text = "Smart tools. Smarter you.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color(0xFF6C6C80),
+                modifier = Modifier.padding(horizontal = 24.dp).offset(y = (-12).dp)
+            )
+
+            // Hero Banner
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color(0xFFF1EFFF))
+            ) {
+                // Background effects
+                Image(
+                    painter = painterResource(id = R.drawable.fitness_hero),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().width(180.dp).offset(x = 20.dp)
+                )
+
+                Row(modifier = Modifier.fillMaxSize().padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.size(56.dp).background(Color.White.copy(alpha=0.6f), CircleShape), contentAlignment = Alignment.Center) {
+                         Icon(Icons.Filled.VerifiedUser, contentDescription = null, tint = Color(0xFF6B58FF), modifier = Modifier.size(32.dp))
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column(modifier = Modifier.fillMaxHeight().fillMaxWidth(0.65f), verticalArrangement = Arrangement.Center) {
+                        Text("PRO MEMBER STATUS ACTIVE", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF5948FF))
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("You have permanently unlocked all state-of-the-art AI-driven fitness strategy engines, custom hydration triggers, and active posture alerts!", style = MaterialTheme.typography.labelSmall.copy(fontSize=10.sp), color = Color(0xFF4A4B6B), lineHeight = 14.sp)
+                    }
+                }
+            }
+
+            // Hydration Card
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(shape = CircleShape, color = Color(0xFFE3F2FD)) {
+                            Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = Color(0xFF2196F3), modifier = Modifier.padding(8.dp).size(20.dp))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Hydration Tracker & Logs", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF1E1E2D)))
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    
+                    Text("Today's Intake", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF1E1E2D))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "💧 Hydration Tracker & Logs",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text("$currentIntake ml ", style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Black, color = Color(0xFF1E1E2D)))
+                            Text("/ $dailyGoal ml", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = Color(0xFF6C6C80)), modifier = Modifier.padding(bottom = 2.dp))
                         }
                         
-                        val loggedToday = state.todayLog.waterIntakeMl
-                        val activeGoal = state.profile.waterGoalMl.coerceAtLeast(1)
-                        val progress = (loggedToday.toFloat() / activeGoal.toFloat()).coerceIn(0f, 1f)
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Today's Intake: $loggedToday ml / $activeGoal ml",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold
+                        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(64.dp)) {
+                            CircularProgressIndicator(
+                                progress = { progress },
+                                color = Color(0xFF2196F3),
+                                trackColor = Color(0xFFF3F3F3),
+                                strokeCap = StrokeCap.Round,
+                                strokeWidth = 6.dp,
+                                modifier = Modifier.fillMaxSize()
                             )
-                            Text(
-                                text = "${(progress * 100).toInt()}% Done",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        LinearProgressIndicator(
-                            progress = progress,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp)),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                        )
-
-                        Text(
-                            text = "Log Water Intake:",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Button(
-                                onClick = { viewModel.addWaterIntake(250) },
-                                modifier = Modifier.weight(1f),
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
-                            ) {
-                                Text("+250ml", style = MaterialTheme.typography.bodySmall)
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Black, fontSize = 14.sp, color = Color(0xFF2196F3)))
+                                Text("Done", style = MaterialTheme.typography.labelSmall.copy(fontSize=8.sp), color = Color(0xFF6C6C80))
                             }
-                            Button(
-                                onClick = { viewModel.addWaterIntake(500) },
-                                modifier = Modifier.weight(1f),
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
-                            ) {
-                                Text("+500ml", style = MaterialTheme.typography.bodySmall)
-                            }
-                            Button(
-                                onClick = { viewModel.addWaterIntake(750) },
-                                modifier = Modifier.weight(1f),
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
-                            ) {
-                                Text("+750ml", style = MaterialTheme.typography.bodySmall)
-                            }
-                            OutlinedButton(
-                                onClick = { viewModel.addWaterIntake(-loggedToday) },
-                                modifier = Modifier.weight(1f),
-                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                            ) {
-                                Text("Reset", style = MaterialTheme.typography.bodySmall)
-                            }
-                        }
-
-                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
-                        // Configuring Water Goal Preferences
-                        Text(
-                            text = "Configure Hydration Target & Reminders",
-                            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        OutlinedTextField(
-                            value = waterGoalInput,
-                            onValueChange = { waterGoalInput = it },
-                            label = { Text("Daily Water Goal (ml)") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(0.8f)) {
-                                Text("Periodic Hydration Reminders", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                Text("Receive recurring notification alerts", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            Switch(
-                                checked = waterReminderEnabled,
-                                onCheckedChange = { waterReminderEnabled = it }
-                            )
-                        }
-
-                        if (waterReminderEnabled) {
-                            OutlinedTextField(
-                                value = waterIntervalInput,
-                                onValueChange = { waterIntervalInput = it },
-                                label = { Text("Reminder Interval (minutes)") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.fillMaxWidth()
-                            )
                         }
                     }
-                }
 
-                // POSTURE & SEDENTARY ALARMS CARD
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                        color = Color(0xFF2196F3),
+                        trackColor = Color(0xFFE3F2FD),
+                        strokeCap = StrokeCap.Round
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text("0 ml", style = MaterialTheme.typography.labelSmall.copy(fontSize=8.sp), color = Color(0xFF6C6C80))
+                        Text("${dailyGoal / 2} ml", style = MaterialTheme.typography.labelSmall.copy(fontSize=8.sp), color = Color(0xFF6C6C80))
+                        Text("$dailyGoal ml", style = MaterialTheme.typography.labelSmall.copy(fontSize=8.sp), color = Color(0xFF6C6C80))
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("Log Water Intake", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF1E1E2D))
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
-                            text = "🚶‍♂️ Active Posture & Sedentary Alerts",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(0.8f)) {
-                                Text("Inactivity Warning Alarm", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                Text("Notify if remaining in one location longer than limit", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            Switch(
-                                checked = sedentaryEnabled,
-                                onCheckedChange = { sedentaryEnabled = it }
-                            )
-                        }
-
-                        if (sedentaryEnabled) {
-                            OutlinedTextField(
-                                value = sedentaryThresholdInput,
-                                onValueChange = { sedentaryThresholdInput = it },
-                                label = { Text("Sitting Threshold Limit (minutes)") },
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-
-                // DIAGNOSTIC SIMULATIONS CARD
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text(
-                            text = "🧪 Interactive Notification Simulator",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "Test notifications without manual waiting directly. Click below to verify device alerts immediately!",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Button(
-                                onClick = { activity?.triggerSedentarySimulation() },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                        listOf(250, 500, 750).forEach { amount ->
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = Color(0xFFF0F7FF),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2196F3).copy(alpha=0.3f)),
+                                modifier = Modifier.clickable { viewModel.addWaterIntake(amount) }.weight(1f).padding(horizontal = 4.dp)
                             ) {
-                                Text("Test Sedentary", style = MaterialTheme.typography.bodySmall)
+                                Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = Color(0xFF2196F3), modifier = Modifier.size(12.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("+$amount ml", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF2196F3))
+                                }
                             }
-                            Button(
-                                onClick = { activity?.triggerWaterReminderSimulation() },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                            ) {
-                                Text("Test Hydration", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = Color(0xFFFFF0F0),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF4B4B).copy(alpha=0.3f)),
+                            modifier = Modifier.clickable { viewModel.resetWaterIntake() }.weight(1f).padding(horizontal = 4.dp)
+                        ) {
+                            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.Refresh, contentDescription = null, tint = Color(0xFFFF4B4B), modifier = Modifier.size(12.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Reset", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFFFF4B4B))
                             }
                         }
                     }
-                }
 
-                // SAVE SUBSCRIPTION SETTINGS MAIN BUTTON
-                Button(
-                    onClick = {
-                        val sedMins = sedentaryThresholdInput.toIntOrNull() ?: 60
-                        val waterG = waterGoalInput.toIntOrNull() ?: 2000
-                        val waterInterval = waterIntervalInput.toIntOrNull() ?: 60
-                        viewModel.updateSubscriptionSettings(
-                            sedentaryAlertEnabled = sedentaryEnabled,
-                            sedentaryAlertMinutes = sedMins,
-                            waterGoalMl = waterG,
-                            waterReminderEnabled = waterReminderEnabled,
-                            waterReminderMinutes = waterInterval
+                    Spacer(modifier = Modifier.height(24.dp))
+                    HorizontalDivider(color = Color(0xFFF3F3F3))
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text("Configure Hydration Target & Reminders", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold), color = Color(0xFF1E1E2D))
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = waterGoalInput,
+                        onValueChange = { waterGoalInput = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text("Daily Water Goal (ml)", style = MaterialTheme.typography.labelSmall, color = Color(0xFF6C6C80)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        leadingIcon = { Icon(Icons.Filled.WaterDrop, contentDescription = null, tint = Color(0xFF2196F3)) },
+                        trailingIcon = { Text("ml", style = MaterialTheme.typography.labelSmall, color = Color(0xFF6C6C80), modifier = Modifier.padding(end=16.dp)) },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = Color(0xFFEBEBEB),
+                            focusedBorderColor = Color(0xFF6B58FF),
                         )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(54.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Text("Save Premium Settings & Alarm Timers", style = MaterialTheme.typography.titleSmall)
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Column {
+                            Text("Periodic Hydration Reminders", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF1E1E2D))
+                            Text("Receive recurring notification alerts", style = MaterialTheme.typography.labelSmall, color = Color(0xFF6C6C80))
+                        }
+                        Switch(
+                            checked = waterReminderEnabled,
+                            onCheckedChange = { waterReminderEnabled = it },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF2196F3))
+                        )
+                    }
                 }
+            }
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            // Posture Card
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF2FBFA)),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+            ) {
+                Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Surface(shape = CircleShape, color = Color(0xFFE8F7F0)) {
+                        Icon(Icons.Filled.DirectionsWalk, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.padding(8.dp).size(20.dp))
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Active Posture & Sedentary Alerts", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF1E1E2D))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Inactivity Warning Alarm", style = MaterialTheme.typography.labelSmall.copy(fontWeight=FontWeight.Bold), color = Color(0xFF1E1E2D))
+                        Text("Notify if remaining in one location longer than limit", style = MaterialTheme.typography.labelSmall.copy(fontSize=10.sp), color = Color(0xFF6C6C80))
+                    }
+                    Switch(
+                        checked = sedentaryEnabled,
+                        onCheckedChange = { sedentaryEnabled = it },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Color(0xFF4CAF50))
+                    )
+                }
+            }
 
-                Text("Set Your Current Fitness Goals", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                
+            // Interactive Simulator Card
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(shape = CircleShape, color = Color(0xFFF3E8FF)) {
+                            Icon(Icons.Filled.Campaign, contentDescription = null, tint = Color(0xFF6B58FF), modifier = Modifier.padding(8.dp).size(20.dp))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("Interactive Notification Simulator", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold), color = Color(0xFF1E1E2D))
+                            Text("Test notifications without manual waiting directly.\nClick below to verify device alerts immediately!", style = MaterialTheme.typography.labelSmall.copy(fontSize=10.sp), color = Color(0xFF6C6C80), lineHeight=14.sp)
+                        }
+                        Box(contentAlignment=Alignment.TopEnd) {
+                            Icon(Icons.Filled.NotificationsActive, contentDescription = null, tint = Color(0xFF6B58FF), modifier = Modifier.size(36.dp).padding(4.dp))
+                            Box(modifier = Modifier.size(14.dp).background(Color(0xFFFF4B4B), CircleShape), contentAlignment=Alignment.Center) {
+                                Text("1", color = Color.White, fontSize = 8.sp, fontWeight=FontWeight.Bold)
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Button(
+                            onClick = { com.example.notification.NotificationHelper.showSedentaryNotification(context, 60) },
+                            modifier = Modifier.weight(1f).height(44.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B58FF)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Filled.DirectionsWalk, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Test Sedentary", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                        }
+                        Button(
+                            onClick = { com.example.notification.NotificationHelper.showWaterReminderNotification(context, 2000, 500) },
+                            modifier = Modifier.weight(1f).height(44.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Filled.WaterDrop, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Test Hydration", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
+                        }
+                    }
+                }
+            }
+
+            // Save Settings Button
+            Button(
+                onClick = {
+                    val wGoal = waterGoalInput.toIntOrNull() ?: 2000
+                    viewModel.updateSubscriptionSettings(
+                        sedentaryAlertEnabled = sedentaryEnabled,
+                        sedentaryAlertMinutes = 60,
+                        waterReminderEnabled = waterReminderEnabled,
+                        waterReminderMinutes = 60,
+                        waterGoalMl = wGoal
+                    )
+                },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(52.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B58FF)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Filled.Save, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Save Premium Settings & Alarm Timers", style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold))
+            }
+
+            // Set Your Current Fitness Goals
+            Column(modifier = Modifier.padding(horizontal = 24.dp)) {
+                Text("Set Your Current Fitness Goals", style = MaterialTheme.typography.titleMedium.copy(fontWeight=FontWeight.Bold), color = Color(0xFF1E1E2D))
+                Spacer(modifier = Modifier.height(12.dp))
                 OutlinedTextField(
                     value = goalsInput,
                     onValueChange = { goalsInput = it },
-                    placeholder = { Text("E.g., Lose 5kg of body fat, build lean core muscle, and prepare for a 10k run in 2 months.") },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 4,
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color(0xFFEBEBEB),
+                        focusedBorderColor = Color(0xFF6B58FF),
+                        unfocusedContainerColor = Color.White,
+                        focusedContainerColor = Color.White
+                    ),
+                    leadingIcon = { Icon(Icons.Filled.TrackChanges, contentDescription = null, tint = Color(0xFF6B58FF)) },
+                    trailingIcon = { Icon(Icons.Filled.Edit, contentDescription = null, tint = Color(0xFF6C6C80), modifier = Modifier.size(18.dp)) },
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = Color(0xFF1E1E2D))
                 )
-                
-                Button(
-                    onClick = {
-                        viewModel.updateProfile(state.profile.age, state.profile.height, state.profile.weight, goalsInput)
-                        viewModel.fetchInsights()
+            }
+
+            // Assemble AI Plan Button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp)
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Brush.horizontalGradient(listOf(Color(0xFF2196F3), Color(0xFF6B58FF))))
+                    .clickable {
+                        // Action here if any
                     },
-                    modifier = Modifier.fillMaxWidth().height(52.dp),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Assemble AI Plan & Meal Guides")
-                }
-                
-                if (state.isLoading) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                } else if (state.aiInsights != null) {
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(18.dp)) {
-                            Text("Your Pro AI Fitness Blueprint", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = state.aiInsights!!,
-                                style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                contentAlignment = Alignment.Center
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("Assemble AI Plan & Meal Guides", style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold, color = Color.White))
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                 }
             }
         }
     }
-
-    if (showPaymentDialog) {
-        AlertDialog(
-            onDismissRequest = { showPaymentDialog = false },
-            icon = { Icon(Icons.Filled.Star, contentDescription = "Razorpay Billing", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(36.dp)) },
-            title = { Text("Razorpay Checkout", fontWeight = FontWeight.Bold) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = "Cost: ₹199 - Lifetime Upgrade",
-                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "I am ready to implement the Razorpay Android SDK for automated production checkout. Once you provide the Razorpay API credentials and Merchant account, I will integrate live payment processing immediately!",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = "In the meantime, click below to simulate a successful payment to unlock and test all Premium features now.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.activateSubscription()
-                        showPaymentDialog = false
-                    }
-                ) {
-                    Text("Simulate Payment (Unlock)")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showPaymentDialog = false }) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
 }
-
-@Composable
-fun BenefitRow(title: String, description: String) {
-    Row(
-        verticalAlignment = Alignment.Top,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Icon(
-            imageVector = Icons.Filled.CheckCircle,
-            contentDescription = "Included",
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp).padding(top = 2.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-

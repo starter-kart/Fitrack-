@@ -20,12 +20,15 @@ import com.example.ui.MainViewModel
 fun TrackScreen(viewModel: MainViewModel) {
     val state by viewModel.state.collectAsState()
 
-    var stepsInput by remember { mutableStateOf(state.todayLog.steps.toString()) }
-    var caloriesInput by remember { mutableStateOf(state.todayLog.caloriesBurned.toString()) }
-
-    var ageInput by remember { mutableStateOf(state.profile.age.toString()) }
-    var heightInput by remember { mutableStateOf(state.profile.height.toString()) }
-    var weightInput by remember { mutableStateOf(state.profile.weight.toString()) }
+    var ageInput by remember(state.profile.age) { mutableStateOf(state.profile.age.toString()) }
+    var heightInput by remember(state.profile.height) { mutableStateOf(state.profile.height.toString()) }
+    var weightInput by remember(state.profile.weight) { mutableStateOf(state.profile.weight.toString()) }
+    
+    var expanded by remember { mutableStateOf(false) }
+    val goalOptions = listOf("Weight Loss", "Gain Weight", "Maintenance", "Build Muscle", "Daily Workout")
+    var selectedGoal by remember(state.profile.goals) { 
+        mutableStateOf(if (state.profile.goals.isEmpty()) goalOptions[0] else state.profile.goals)
+    }
 
     Scaffold(
         topBar = {
@@ -40,38 +43,36 @@ fun TrackScreen(viewModel: MainViewModel) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Daily Activity", style = MaterialTheme.typography.titleMedium)
+            Text("Profile & Goals", style = MaterialTheme.typography.titleMedium)
             
-            OutlinedTextField(
-                value = stepsInput,
-                onValueChange = { stepsInput = it },
-                label = { Text("Steps") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-            
-            OutlinedTextField(
-                value = caloriesInput,
-                onValueChange = { caloriesInput = it },
-                label = { Text("Calories Burned") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Button(
-                onClick = {
-                    val stp = stepsInput.toIntOrNull() ?: 0
-                    val cal = caloriesInput.toIntOrNull() ?: 0
-                    viewModel.updateDailyLog(stp, cal)
-                },
-                modifier = Modifier.fillMaxWidth()
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it }
             ) {
-                Text("Save Daily Activity")
+                OutlinedTextField(
+                    value = selectedGoal,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Main Goal") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    goalOptions.forEach { selectionOption ->
+                        DropdownMenuItem(
+                            text = { Text(selectionOption) },
+                            onClick = {
+                                selectedGoal = selectionOption
+                                expanded = false
+                            }
+                        )
+                    }
+                }
             }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-            Text("Profile & BMI", style = MaterialTheme.typography.titleMedium)
             
             OutlinedTextField(
                 value = ageInput,
@@ -102,7 +103,7 @@ fun TrackScreen(viewModel: MainViewModel) {
                     val age = ageInput.toIntOrNull() ?: 0
                     val h = heightInput.toFloatOrNull() ?: 0f
                     val w = weightInput.toFloatOrNull() ?: 0f
-                    viewModel.updateProfile(age, h, w, state.profile.goals)
+                    viewModel.updateProfile(age, h, w, selectedGoal)
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

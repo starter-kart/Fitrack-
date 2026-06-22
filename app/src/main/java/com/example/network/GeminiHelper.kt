@@ -74,6 +74,10 @@ object RetrofitClient {
 class GeminiHelper {
     suspend fun getInsights(profileDetails: String, logDetails: String): String = withContext(Dispatchers.IO) {
         val apiKey = BuildConfig.GEMINI_API_KEY
+        if (apiKey.isEmpty() || apiKey.contains("YOUR_API_KEY") || apiKey == "null") {
+            return@withContext "🚨 API Key is missing!\n\nPlease configure your Gemini API key in the AI Studio Settings (Secrets panel) or your local '.env' file to unlock AI insights."
+        }
+        
         val prompt = "You are an expert fitness coach AI. Based on the user profile: $profileDetails, and today's log: $logDetails, provide actionable insights, timeline instructions for their goals, and dietary advice. Keep it compact, structured, and encouraging."
         val request = GenerateContentRequest(
             contents = listOf(Content(parts = listOf(Part(text = prompt))))
@@ -82,7 +86,7 @@ class GeminiHelper {
             val response = RetrofitClient.service.generateContent(apiKey, request)
             response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text ?: "No insights available right now."
         } catch (e: Exception) {
-            "Error fetching AI insights: ${e.message}. Please check your network and API key."
+            "Error fetching AI insights: ${e.message}. Please check your network and API key validity."
         }
     }
 }

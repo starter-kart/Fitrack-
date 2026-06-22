@@ -7,34 +7,36 @@ import java.util.Date
 import java.util.Locale
 
 data class UserProfile(
-    val age: Int = 0,
-    val weight: Float = 0f,
-    val height: Float = 0f,
-    val bmi: Float = 0f,
-    val goals: String = "",
-    val subscriptionActive: Boolean = false,
-    val sedentaryAlertEnabled: Boolean = false,
-    val sedentaryAlertThresholdMinutes: Int = 60,
-    val waterGoalMl: Int = 2000,
-    val waterReminderEnabled: Boolean = false,
-    val waterReminderIntervalMinutes: Int = 60
+    var age: Int = 0,
+    var weight: Float = 0f,
+    var height: Float = 0f,
+    var bmi: Float = 0f,
+    var goals: String = "",
+    @get:com.google.firebase.firestore.PropertyName("subscriptionActive")
+    @set:com.google.firebase.firestore.PropertyName("subscriptionActive")
+    var subscriptionActive: Boolean = false,
+    var sedentaryAlertEnabled: Boolean = false,
+    var sedentaryAlertThresholdMinutes: Int = 60,
+    var waterGoalMl: Int = 2000,
+    var waterReminderEnabled: Boolean = false,
+    var waterReminderIntervalMinutes: Int = 60
 )
 
 data class DailyLog(
-    val date: String = "",
-    val steps: Int = 0,
-    val caloriesBurned: Int = 0,
-    val waterIntakeMl: Int = 0
+    var date: String = "",
+    var steps: Int = 0,
+    var caloriesBurned: Int = 0,
+    var waterIntakeMl: Int = 0
 )
 
 data class BmiRecord(
-    val id: String = "",
-    val timestamp: Long = 0L,
-    val dateString: String = "",
-    val height: Float = 0f,
-    val weight: Float = 0f,
-    val bmi: Float = 0f,
-    val category: String = ""
+    var id: String = "",
+    var timestamp: Long = 0L,
+    var dateString: String = "",
+    var height: Float = 0f,
+    var weight: Float = 0f,
+    var bmi: Float = 0f,
+    var category: String = ""
 )
 
 class FirestoreRepository {

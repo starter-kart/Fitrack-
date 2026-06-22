@@ -1,5 +1,9 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
+import com.example.R
 import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -39,30 +43,28 @@ fun HomeScreen(viewModel: MainViewModel) {
     var selectedTab by remember { mutableStateOf(0) } // 0 = Steps, 1 = Weight
     var activeBarIndex by remember { mutableStateOf(-1) }
     
-    // Construct real + mock weekly data based on todayLog and weight
+    // Construct real weekly data based on dailyLogs and bmiHistory
     val stepsGoal = 10000
-    val weightTarget = (state.profile.height - 100f) * 0.9f // ideal body weight estimation
     
-    val weekDays = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-    
-    // Smoothly integrate user's current todayLog step values as the final (Sunday) point
-    val stepsList = remember(state.todayLog.steps) {
-        val baseSteps = listOf(6200, 7800, 5400, 9200, 8100, 11400)
-        baseSteps + state.todayLog.steps
+    val recentLogs = state.dailyLogs.reversed().takeLast(6)
+    val stepsList = remember(recentLogs, state.todayLog) {
+        val list = recentLogs.filter { it.date != state.todayLog.date }.map { it.steps }.toMutableList()
+        list.add(state.todayLog.steps)
+        list
+    }
+    val weekDays = remember(recentLogs, state.todayLog) {
+        val list = recentLogs.filter { it.date != state.todayLog.date }.map { it.date.takeLast(5) }.toMutableList()
+        list.add("Today")
+        list
     }
     
-    // Smoothly integrate user's current weight value as the final (current) weight
-    val weightList = remember(state.profile.weight) {
-        val baseWeight = if (state.profile.weight > 0) state.profile.weight else 75.0f
-        listOf(
-            baseWeight + 1.8f,
-            baseWeight + 1.2f,
-            baseWeight + 1.4f,
-            baseWeight + 0.8f,
-            baseWeight + 0.5f,
-            baseWeight + 0.2f,
-            baseWeight
-        )
+    val recentBmi = state.bmiHistory.reversed().takeLast(7)
+    val weightList = remember(recentBmi, state.profile) {
+        if (recentBmi.isEmpty()) {
+            listOf(if (state.profile.weight > 0) state.profile.weight else 0f)
+        } else {
+            recentBmi.map { it.weight }
+        }
     }
 
     Scaffold(
@@ -112,6 +114,21 @@ fun HomeScreen(viewModel: MainViewModel) {
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // HERO BANNER
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.fitness_hero),
+                    contentDescription = "Fitness Hero",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
             
             // KEY STATISTICS ROW (Grid replacement)
             Row(
@@ -311,7 +328,7 @@ fun HomeScreen(viewModel: MainViewModel) {
                                 val canvasHeight = size.height
                                 val barWidth = 32.dp.toPx()
                                 val numBars = stepsList.size
-                                val spaceBetween = (canvasWidth - (barWidth * numBars)) / (numBars + 1)
+                                val spaceBetween = if (numBars > 1) (canvasWidth - (barWidth * numBars)) / (numBars + 1) else (canvasWidth - barWidth) / 2
 
                                 // Draw background guidelines
                                 for (i in 1..3) {
@@ -327,7 +344,7 @@ fun HomeScreen(viewModel: MainViewModel) {
                                 // Draw individual steps bars
                                 stepsList.forEachIndexed { index, value ->
                                     val xOffset = spaceBetween + index * (barWidth + spaceBetween)
-                                    val progressPercentage = (value.toFloat() / maxSteps).coerceIn(0.05f, 1.0f)
+                                    val progressPercentage = if (maxSteps > 0) (value.toFloat() / maxSteps).coerceIn(0.05f, 1.0f) else 0.05f
                                     val barHeight = canvasHeight * progressPercentage
                                     val yOffset = canvasHeight - barHeight
 
@@ -354,17 +371,17 @@ fun HomeScreen(viewModel: MainViewModel) {
                             // WEIGHT PROGRESS LINE CHART
                             val minW = (weightList.minOrNull() ?: 60f) - 2f
                             val maxW = (weightList.maxOrNull() ?: 100f) + 2f
-                            val valRange = maxW - minW
+                            val valRange = if (maxW - minW > 0) maxW - minW else 10f
                             val lineColor = MaterialTheme.colorScheme.primary
                             
                             Canvas(modifier = Modifier.fillMaxSize()) {
                                 val canvasWidth = size.width
                                 val canvasHeight = size.height
                                 val numPoints = weightList.size
-                                val xSpace = canvasWidth / (numPoints - 1)
+                                val xSpace = if (numPoints > 1) canvasWidth / (numPoints - 1) else canvasWidth / 2
 
                                 val points = weightList.mapIndexed { index, value ->
-                                    val x = index * xSpace
+                                    val x = if (numPoints > 1) index * xSpace else xSpace
                                     val y = canvasHeight - ((value - minW) / valRange) * canvasHeight
                                     Offset(x, y)
                                 }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Lock
@@ -146,7 +147,7 @@ fun SignInContent(
             horizontalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = Icons.Filled.DirectionsRun,
+                imageVector = Icons.AutoMirrored.Filled.DirectionsRun,
                 contentDescription = null,
                 tint = primaryColor,
                 modifier = Modifier.size(36.dp)
@@ -193,7 +194,7 @@ fun SignInContent(
                 .padding(horizontal = 24.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            FeatureItem(icon = Icons.Filled.DirectionsWalk, title = "Track Steps", subtitle = "Stay active daily", color = Color(0xFF6D5DFC))
+            FeatureItem(icon = Icons.AutoMirrored.Filled.DirectionsWalk, title = "Track Steps", subtitle = "Stay active daily", color = Color(0xFF6D5DFC))
             FeatureItem(icon = Icons.Filled.WaterDrop, title = "Water Reminder", subtitle = "Stay hydrated", color = Color(0xFF4CABF4))
             FeatureItem(icon = Icons.Filled.BarChart, title = "Progress Analytics", subtitle = "See real progress", color = Color(0xFF4CAF50))
         }
@@ -344,7 +345,7 @@ fun SignInContent(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("Sign In", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color.White)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Icon(Icons.Filled.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                             }
                         }
                     }
@@ -376,7 +377,7 @@ fun SignInContent(
                         modifier = Modifier.clickable { onNavigateToSignUp() }
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Icon(Icons.Filled.ArrowForward, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = primaryColor, modifier = Modifier.size(16.dp))
                 }
             }
         }
@@ -421,7 +422,7 @@ fun SignUpContent(
                     .clickable { onNavigateToSignIn() }
                     .shadow(4.dp, CircleShape, spotColor = Color(0x33000000))
             ) {
-                Icon(Icons.Filled.ArrowBack, contentDescription = "Back", modifier = Modifier.padding(12.dp))
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", modifier = Modifier.padding(12.dp))
             }
         }
 
@@ -616,7 +617,7 @@ fun SignUpContent(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Create Account", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = Color.White)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Icon(Icons.Filled.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                     }
                 }
             }

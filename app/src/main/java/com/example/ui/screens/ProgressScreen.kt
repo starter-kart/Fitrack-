@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
@@ -314,7 +315,7 @@ fun ProgressScreen(viewModel: MainViewModel) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Surface(shape = CircleShape, color = Color(0xFF4CAF50)) {
-                                    Icon(Icons.Filled.DirectionsRun, contentDescription = null, tint = Color.White, modifier = Modifier.padding(4.dp).size(14.dp))
+                                    Icon(Icons.AutoMirrored.Filled.DirectionsRun, contentDescription = null, tint = Color.White, modifier = Modifier.padding(4.dp).size(14.dp))
                                 }
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("TOTAL RECORDED STEPS", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold, fontSize = 9.sp), color = Color(0xFF4A4B6B), maxLines = 1)

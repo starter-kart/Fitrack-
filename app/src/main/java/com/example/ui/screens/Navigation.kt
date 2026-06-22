@@ -61,7 +61,14 @@ fun MainAppNavigation(viewModel: MainViewModel) {
             composable("home") { HomeScreen(viewModel) }
             composable("progress") { ProgressScreen(viewModel) }
             composable("track") { TrackScreen(viewModel) }
-            composable("insights") { InsightsScreen(viewModel) }
+            composable("insights") { 
+                val state by viewModel.state.collectAsState()
+                if (state.profile.subscriptionActive) {
+                    InsightsScreen(viewModel)
+                } else {
+                    PaywallScreen(viewModel)
+                }
+            }
         }
     }
 }

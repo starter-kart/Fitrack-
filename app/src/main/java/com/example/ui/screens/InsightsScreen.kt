@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.*
@@ -322,7 +323,7 @@ fun InsightsScreen(viewModel: MainViewModel) {
             ) {
                 Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
                     Surface(shape = CircleShape, color = Color(0xFFE8F7F0)) {
-                        Icon(Icons.Filled.DirectionsWalk, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.padding(8.dp).size(20.dp))
+                        Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = null, tint = Color(0xFF4CAF50), modifier = Modifier.padding(8.dp).size(20.dp))
                     }
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
@@ -371,7 +372,7 @@ fun InsightsScreen(viewModel: MainViewModel) {
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6B58FF)),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Icon(Icons.Filled.DirectionsWalk, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Icon(Icons.AutoMirrored.Filled.DirectionsWalk, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Test Sedentary", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         }
